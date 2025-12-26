@@ -6,7 +6,29 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
-model = joblib.load("cost_model.pkl")
+import os
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+MODEL_PATH = "cost_model.pkl"
+
+if not os.path.exists(MODEL_PATH):
+    # Train model if it doesn't exist
+    X = np.array([
+        [10, 1, 50],
+        [50, 2, 45],
+        [100, 3, 40],
+        [500, 4, 35],
+        [1000, 5, 30]
+    ])
+    y = np.array([500, 420, 350, 220, 180])
+
+    temp_model = LinearRegression()
+    temp_model.fit(X, y)
+    joblib.dump(temp_model, MODEL_PATH)
+
+model = joblib.load(MODEL_PATH)
+
 
 @app.route("/")
 def home():
