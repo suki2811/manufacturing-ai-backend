@@ -3,27 +3,33 @@ from flask_cors import CORS
 import os
 
 app = Flask(__name__)
-CORS(app)
 
-@app.route("/")
+# FULL CORS CONFIG (THIS IS THE FIX)
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=True
+)
+
+@app.route("/", methods=["GET"])
 def home():
     return "Manufacturing Backend Live"
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict", methods=["POST", "OPTIONS"])
 def predict():
-    data = request.json
+    if request.method == "OPTIONS":
+        # Preflight request
+        return "", 200
+
+    data = request.get_json(force=True)
 
     quantity = data.get("quantity", 100)
     complexity = data.get("complexity", 3)
     material_cost = data.get("material_cost", 40)
 
-    # Simple cost logic
     cost = (material_cost * 0.6) + (complexity * 50) + (1000 / quantity)
 
-    if quantity < 200:
-        process = "CNC Machining"
-    else:
-        process = "Casting"
+    process = "CNC Machining" if quantity < 200 else "Casting"
 
     return jsonify({
         "estimated_cost": round(cost, 2),
@@ -34,4 +40,5 @@ def predict():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
